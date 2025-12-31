@@ -1,0 +1,47 @@
+// bootJar와 jar 설정은 Spring Boot 플러그인이 자동으로 처리하므로 제거
+// 필요시 루트 프로젝트의 subprojects 블록에서 설정 가능
+
+// 테스트 스킵 (개발 중에는 테스트 없이 빌드)
+test {
+    enabled = false
+}
+
+dependencies {
+	// Spring MVC (Gateway를 MVC 구조로 변경)
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	
+	// JPA (모놀리식 구조 - 데이터베이스)
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	runtimeOnly 'org.postgresql:postgresql'
+	
+	// Eureka Client (Service Discovery)
+	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+	
+	// Redis (Rate Limiting)
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	
+	// JWT
+	implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+	
+	// Actuator (모니터링)
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'io.micrometer:micrometer-registry-prometheus'
+	
+	// SpringDoc OpenAPI (Swagger) - MVC 버전
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
+	
+	// Config (optional)
+	implementation 'org.springframework.cloud:spring-cloud-starter-config'
+	
+	// DevTools
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	
+	// Lombok
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+	
+	// Test
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}

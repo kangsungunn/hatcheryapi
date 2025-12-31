@@ -1,0 +1,36 @@
+spring:
+  # 테스트 환경에서는 데이터소스 비활성화
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
+      - org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration
+
+# JWT 설정 (테스트용 기본값)
+jwt:
+  secret: test-secret-key-for-testing-purposes-only-min-32-characters
+  expiration: 86400000
+  refresh-expiration: 604800000
+
+# OAuth 설정 (테스트용)
+kakao:
+  rest-api-key: test-key
+  redirect-uri: http://localhost:8080/api/auth/kakao/callback
+  client-secret: test-secret
+
+naver:
+  client-id: test-id
+  client-secret: test-secret
+  redirect-uri: http://localhost:8080/api/auth/naver/callback
+
+google:
+  client-id: test-id
+  client-secret: test-secret
+  redirect-uri: http://localhost:8080/api/auth/google/callback
+
+# Eureka 비활성화
+eureka:
+  client:
+    enabled: false

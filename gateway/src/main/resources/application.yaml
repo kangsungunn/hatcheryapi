@@ -1,0 +1,97 @@
+spring:
+  application:
+    name: kroaddy-api
+  server:
+    port: 8080
+  cloud:
+    config:
+      enabled: false
+
+  # 데이터베이스 설정 (Neon PostgreSQL)
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/kroaddy}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:org.postgresql.Driver}
+    hikari:
+      maximum-pool-size: ${SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE:10}
+      minimum-idle: ${SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE:5}
+      connection-timeout: ${SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT:30000}
+
+  # JPA 설정
+  jpa:
+    hibernate:
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:none}
+    show-sql: ${SPRING_JPA_SHOW_SQL:false}
+    properties:
+      hibernate:
+        format_sql: true
+
+  # Redis 설정
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: ${REDIS_TIMEOUT:2000}
+      lettuce:
+        pool:
+          max-active: ${REDIS_POOL_MAX_ACTIVE:8}
+          max-idle: ${REDIS_POOL_MAX_IDLE:8}
+          min-idle: ${REDIS_POOL_MIN_IDLE:0}
+
+# Gateway는 Eureka 사용하지 않음
+eureka:
+  client:
+    enabled: false
+
+# JWT 설정
+jwt:
+  secret: ${JWT_SECRET:default-secret-key-change-in-production-min-32-characters}
+  expiration: ${JWT_EXPIRATION:86400000} # 기본 24시간 (밀리초)
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000} # 기본 7일 (밀리초)
+
+# OAuth 설정
+kakao:
+  rest-api-key: ${KAKAO_REST_API_KEY:}
+  redirect-uri: ${KAKAO_REDIRECT_URI:http://localhost:8080/api/auth/kakao/callback}
+  client-secret: ${KAKAO_CLIENT_SECRET:}
+
+naver:
+  client-id: ${NAVER_CLIENT_ID:}
+  client-secret: ${NAVER_CLIENT_SECRET:}
+  redirect-uri: ${NAVER_REDIRECT_URI:http://localhost:8080/api/auth/naver/callback}
+
+google:
+  client-id: ${GOOGLE_CLIENT_ID:}
+  client-secret: ${GOOGLE_CLIENT_SECRET:}
+  redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:8080/api/auth/google/callback}
+
+# 프론트엔드 설정
+frontend:
+  login-callback-url: ${FRONT_LOGIN_CALLBACK_URL:http://localhost:3000}
+  login-success-path: ${FRONT_LOGIN_SUCCESS_PATH:/}
+
+# 쿠키 설정
+cookie:
+  secure: ${COOKIE_SECURE:false} # 개발: false, 프로덕션: true (HTTPS 필수)
+  same-site: ${COOKIE_SAME_SITE:Lax} # Lax, Strict, None
+
+# Swagger / Springdoc 설정
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /docs
+    enabled: true
+    try-it-out-enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
+
+# 로깅 설정
+logging:
+  level:
+    root: ${LOG_LEVEL:INFO}
+    com.kroaddy: ${LOG_LEVEL:DEBUG}
+    org.springframework.web: ${LOG_LEVEL:INFO}
+    org.hibernate: ${LOG_LEVEL:WARN}

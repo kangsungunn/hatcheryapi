@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: auth-service
+  server:
+    port: 8081
+
+kakao:
+  rest-api-key: ${KAKAO_REST_API_KEY:}
+  redirect-uri: ${KAKAO_REDIRECT_URI:http://localhost:8080/api/auth/kakao/callback}
+  client-secret: ${KAKAO_CLIENT_SECRET:}
+
+naver:
+  client-id: ${NAVER_CLIENT_ID:}
+  client-secret: ${NAVER_CLIENT_SECRET:}
+  redirect-uri: ${NAVER_REDIRECT_URI:http://localhost:8080/api/auth/naver/callback}
+
+google:
+  client-id: ${GOOGLE_CLIENT_ID:}
+  client-secret: ${GOOGLE_CLIENT_SECRET:}
+  redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:8080/api/auth/google/callback}
+  
+jwt:
+  secret: ${JWT_SECRET:default-secret-key-change-in-production-min-32-characters}
+  expiration: ${JWT_EXPIRATION:86400000} # 기본 24시간 (밀리초)
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000} # 기본 7일 (밀리초)
+
+frontend:
+  login-callback-url: ${FRONT_LOGIN_CALLBACK_URL:http://localhost:3000}
+  login-success-path: ${FRONT_LOGIN_SUCCESS_PATH:/}
+
+cookie:
+  secure: ${COOKIE_SECURE:false}  # 개발: false, 프로덕션: true (HTTPS 필수)
+  same-site: ${COOKIE_SAME_SITE:Lax}  # Lax, Strict, None
+
+eureka:
+  client:
+    enabled: false
