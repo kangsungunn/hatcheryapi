@@ -38,6 +38,11 @@ jobs:
                   context: .
                   file: ./Dockerfile
                   push: true
+                  build-args: |
+                      BUILD_TIME=${{ github.event.head_commit.timestamp || github.run_started_at }}
+                      BUILD_VERSION=${{ github.sha }}
+                      GIT_COMMIT=${{ github.sha }}
+                      GIT_BRANCH=${{ github.ref_name }}
                   tags: |
                       ${{ env.IMAGE_NAME }}:latest
                       ${{ env.IMAGE_NAME }}:${{ github.sha }}

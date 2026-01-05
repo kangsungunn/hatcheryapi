@@ -95,3 +95,12 @@ logging:
     com.kroaddy: ${LOG_LEVEL:DEBUG}
     org.springframework.web: ${LOG_LEVEL:INFO}
     org.hibernate: ${LOG_LEVEL:WARN}
+
+# 배포 정보 설정 (GitHub Actions에서 주입)
+app:
+  build:
+    time: ${BUILD_TIME:Unknown}
+    version: ${BUILD_VERSION:dev}
+  git:
+    commit: ${GIT_COMMIT:Unknown}
+    branch: ${GIT_BRANCH:main}

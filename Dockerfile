@@ -24,6 +24,18 @@ RUN chmod +x gradlew && ./gradlew :gateway:build -x test
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 
+# 빌드 정보를 받을 ARG 선언
+ARG BUILD_TIME
+ARG BUILD_VERSION
+ARG GIT_COMMIT
+ARG GIT_BRANCH
+
+# 환경변수로 설정 (애플리케이션에서 사용)
+ENV BUILD_TIME=${BUILD_TIME}
+ENV BUILD_VERSION=${BUILD_VERSION}
+ENV GIT_COMMIT=${GIT_COMMIT}
+ENV GIT_BRANCH=${GIT_BRANCH}
+
 # curl 설치 (헬스체크용)
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
