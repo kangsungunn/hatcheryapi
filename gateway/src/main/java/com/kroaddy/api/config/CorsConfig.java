@@ -93,11 +93,4 @@ public class CorsConfig implements WebMvcConfigurer {
      * 
      * @deprecated FilterRegistrationBean을 사용하는 것이 더 확실함
      */
-    @Bean
-    @Deprecated
-    public CorsFilter corsFilter() {
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", getCorsConfiguration());
-        return new CorsFilter(source);
-    }
 }
