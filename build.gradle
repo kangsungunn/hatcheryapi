@@ -32,8 +32,14 @@ allprojects {
 			url = uri("https://repo.spring.io/release")
 		}
 		
-		// Maven Central (fallback)
-		mavenCentral()
+		// Maven Central (fallback) - 403 에러 방지를 위해 재시도 설정
+		mavenCentral {
+			content {
+				// Spring 관련은 제외 (이미 Spring Repository에서 가져옴)
+				excludeGroupByRegex "org\\.springframework.*"
+				excludeGroupByRegex "org\\.springdoc.*"
+			}
+		}
 		
 		// Gradle Plugin Portal (플러그인용)
 		maven {

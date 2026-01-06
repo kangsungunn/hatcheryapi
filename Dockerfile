@@ -12,13 +12,16 @@ COPY gradlew .
 COPY gradle gradle
 COPY build.gradle .
 COPY settings.gradle .
+COPY gradle.properties .
+COPY init.gradle .
 
 # 서브프로젝트 복사
 COPY gateway gateway
 COPY services services
 
 # 실행 권한 부여 및 Gateway 빌드
-RUN chmod +x gradlew && ./gradlew :gateway:build -x test
+# init.gradle을 사용하여 저장소 우선순위 강제
+RUN chmod +x gradlew && ./gradlew :gateway:build -x test --init-script init.gradle --refresh-dependencies
 
 # 2단계: 실행
 FROM eclipse-temurin:21-jre
