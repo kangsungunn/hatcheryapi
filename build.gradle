@@ -1,3 +1,20 @@
+buildscript {
+	repositories {
+		// Spring Repository를 먼저 시도 (Spring Boot 플러그인용)
+		maven {
+			name = "Spring Repository"
+			url = uri("https://repo.spring.io/release")
+		}
+		// Maven Central
+		mavenCentral()
+		// Gradle Plugin Portal
+		maven {
+			name = "Gradle Plugin Portal"
+			url = uri("https://plugins.gradle.org/m2")
+		}
+	}
+}
+
 plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.5.7' apply false
@@ -9,23 +26,19 @@ allprojects {
 	version = '0.0.1-SNAPSHOT'
 	
 	repositories {
-		// Maven Central (주 저장소) - 여러 URL 시도
-		mavenCentral {
-			content {
-				includeGroupByRegex ".*"
-			}
+		// Spring Repository를 먼저 시도 (Spring 의존성 우선)
+		maven {
+			name = "Spring Repository"
+			url = uri("https://repo.spring.io/release")
 		}
+		
+		// Maven Central (fallback)
+		mavenCentral()
 		
 		// Gradle Plugin Portal (플러그인용)
 		maven {
 			name = "Gradle Plugin Portal"
 			url = uri("https://plugins.gradle.org/m2")
-		}
-		
-		// Spring Repository (Spring 의존성용)
-		maven {
-			name = "Spring Repository"
-			url = uri("https://repo.spring.io/release")
 		}
 		
 		// Google Maven Repository (fallback)
