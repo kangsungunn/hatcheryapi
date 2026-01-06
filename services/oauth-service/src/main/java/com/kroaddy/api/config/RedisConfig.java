@@ -5,9 +5,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+
+import java.time.Duration;
 
 @Configuration
 public class RedisConfig {
@@ -21,10 +24,12 @@ public class RedisConfig {
     @Value("${spring.data.redis.password:}")
     private String redisPassword;
 
+    @Value("${REDIS_SSL:false}")
+    private boolean redisSsl;
+
     /**
      * Redis 연결 팩토리 생성
-     * Upstash를 사용하는 경우 application.yaml에서 ssl: true로 설정
-     * Spring Boot의 자동 설정이 SSL을 처리합니다
+     * Upstash를 사용하는 경우 REDIS_SSL=true 환경 변수 설정 필요
      */
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
@@ -36,8 +41,20 @@ public class RedisConfig {
             config.setPassword(redisPassword);
         }
 
-        // LettuceConnectionFactory는 application.yaml의 SSL 설정을 자동으로 읽습니다
-        return new LettuceConnectionFactory(config);
+        // Lettuce 클라이언트 설정
+        LettuceClientConfiguration.LettuceClientConfigurationBuilder clientConfigBuilder = 
+            LettuceClientConfiguration.builder()
+                .commandTimeout(Duration.ofSeconds(2))
+                .shutdownTimeout(Duration.ofMillis(100));
+
+        // Upstash는 TLS를 사용하므로 SSL 설정
+        if (redisSsl) {
+            clientConfigBuilder.useSsl();
+        }
+
+        LettuceClientConfiguration clientConfig = clientConfigBuilder.build();
+        
+        return new LettuceConnectionFactory(config, clientConfig);
     }
 
     /**
