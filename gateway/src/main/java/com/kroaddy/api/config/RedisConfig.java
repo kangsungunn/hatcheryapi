@@ -105,7 +105,7 @@ public class RedisConfig {
 
     /**
      * RedisTemplate Bean 생성
-     * 생성 후 연결 테스트 수행
+     * 연결 테스트는 비동기로 수행하여 애플리케이션 시작을 막지 않음
      */
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
@@ -117,41 +117,51 @@ public class RedisConfig {
         template.setHashValueSerializer(new StringRedisSerializer());
         template.afterPropertiesSet();
         
-        // 연결 테스트
-        try {
-            String normalizedHost = normalizeHost(redisHost);
-            var connection = connectionFactory.getConnection();
+        // 연결 테스트를 비동기로 수행 (애플리케이션 시작을 막지 않음)
+        String normalizedHost = normalizeHost(redisHost);
+        new Thread(() -> {
             try {
-                String pingResult = connection.ping();
-                System.out.println("\n" + "=".repeat(80));
-                System.out.println("[Redis 연결 테스트]");
-                System.out.println("=".repeat(80));
-                System.out.println("✅ Redis 연결 성공!");
-                System.out.println("✅ Host: " + normalizedHost);
-                System.out.println("✅ PING 응답: " + pingResult);
-                if (normalizedHost.contains("upstash.io")) {
-                    System.out.println("✅ Upstash Redis에 연결되었습니다!");
-                } else if (normalizedHost.equals("localhost") || normalizedHost.equals("127.0.0.1")) {
-                    System.out.println("⚠️ 로컬 Redis에 연결되었습니다 (Upstash 아님)");
-                } else {
-                    System.out.println("ℹ️ Redis Host: " + normalizedHost);
+                // 잠시 대기 (애플리케이션 시작 후)
+                Thread.sleep(2000);
+                
+                var connection = connectionFactory.getConnection();
+                try {
+                    String pingResult = connection.ping();
+                    System.out.println("\n" + "=".repeat(80));
+                    System.out.println("[Redis 연결 테스트]");
+                    System.out.println("=".repeat(80));
+                    System.out.println("✅ Redis 연결 성공!");
+                    System.out.println("✅ Host: " + normalizedHost);
+                    System.out.println("✅ PING 응답: " + pingResult);
+                    if (normalizedHost.contains("upstash.io")) {
+                        System.out.println("✅ Upstash Redis에 연결되었습니다!");
+                    } else if (normalizedHost.equals("localhost") || normalizedHost.equals("127.0.0.1")) {
+                        System.out.println("⚠️ 로컬 Redis에 연결되었습니다 (Upstash 아님)");
+                    } else {
+                        System.out.println("ℹ️ Redis Host: " + normalizedHost);
+                    }
+                    System.out.println("=".repeat(80) + "\n");
+                } catch (Exception e) {
+                    System.err.println("\n" + "=".repeat(80));
+                    System.err.println("[Redis 연결 테스트] 실패");
+                    System.err.println("=".repeat(80));
+                    System.err.println("❌ Redis 연결 실패: " + e.getMessage());
+                    System.err.println("Host: " + normalizedHost);
+                    if (e.getCause() != null) {
+                        System.err.println("원인: " + e.getCause().getMessage());
+                    }
+                    System.err.println("=".repeat(80) + "\n");
+                } finally {
+                    try {
+                        connection.close();
+                    } catch (Exception ignored) {}
                 }
-                System.out.println("=".repeat(80) + "\n");
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             } catch (Exception e) {
-                System.err.println("\n" + "=".repeat(80));
-                System.err.println("[Redis 연결 테스트] 실패");
-                System.err.println("=".repeat(80));
-                System.err.println("❌ Redis 연결 실패: " + e.getMessage());
-                System.err.println("Host: " + normalizedHost);
-                e.printStackTrace();
-                System.err.println("=".repeat(80) + "\n");
-            } finally {
-                connection.close();
+                System.err.println("❌ Redis 연결 테스트 중 오류: " + e.getMessage());
             }
-        } catch (Exception e) {
-            System.err.println("❌ Redis 연결 테스트 중 오류: " + e.getMessage());
-            e.printStackTrace();
-        }
+        }, "RedisConnectionTest").start();
         
         return template;
     }
