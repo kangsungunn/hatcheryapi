@@ -10,6 +10,7 @@ import com.kroaddy.api.jwt.JwtTokenProvider;
 import com.kroaddy.api.kakao.dto.KakaoUserInfo;
 
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.annotation.PostConstruct;
 import org.springframework.http.ResponseCookie;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -41,6 +42,40 @@ public class KakaoController {
                 this.kakaoService = kakaoService;
                 this.jwtTokenProvider = jwtTokenProvider;
                 System.out.println("[카카오 컨트롤러 초기화] frontendCallbackUrl: " + frontendCallbackUrl);
+        }
+
+        /**
+         * 환경 변수 진단 (ChatGPT 제안)
+         * 컨테이너 내부에서 환경 변수가 제대로 주입되었는지 확인
+         */
+        @PostConstruct
+        public void checkEnv() {
+                System.out.println("\n" + "=".repeat(80));
+                System.out.println("[카카오 컨트롤러] 환경 변수 진단 시작");
+                System.out.println("=".repeat(80));
+                
+                // 1. Spring @Value로 주입된 값 확인
+                System.out.println("[@Value] frontend.login-callback-url: " + frontendCallbackUrl);
+                
+                // 2. System.getenv()로 직접 확인 (여러 가능한 변수명 시도)
+                System.out.println("[System.getenv] FRONTEND_LOGIN_CALLBACK_URL: " + System.getenv("FRONTEND_LOGIN_CALLBACK_URL"));
+                System.out.println("[System.getenv] FRONTEND_CALLBACK_URL: " + System.getenv("FRONTEND_CALLBACK_URL"));
+                System.out.println("[System.getenv] frontend.login-callback-url: " + System.getenv("frontend.login-callback-url"));
+                
+                // 3. 모든 환경 변수에서 frontend 관련 찾기
+                System.out.println("\n[모든 환경 변수에서 'FRONTEND' 검색]:");
+                System.getenv().entrySet().stream()
+                    .filter(entry -> entry.getKey().toUpperCase().contains("FRONTEND"))
+                    .forEach(entry -> System.out.println("  " + entry.getKey() + " = " + entry.getValue()));
+                
+                // 4. 모든 환경 변수에서 callback 관련 찾기
+                System.out.println("\n[모든 환경 변수에서 'CALLBACK' 검색]:");
+                System.getenv().entrySet().stream()
+                    .filter(entry -> entry.getKey().toUpperCase().contains("CALLBACK"))
+                    .forEach(entry -> System.out.println("  " + entry.getKey() + " = " + entry.getValue()));
+                
+                System.out.println("=".repeat(80));
+                System.out.println("[카카오 컨트롤러] 환경 변수 진단 완료\n");
         }
 
         /**
@@ -134,7 +169,12 @@ public class KakaoController {
 
                         // 6. 프론트엔드 콜백 페이지로 리다이렉트(토큰 포함 URL)
                         // frontendCallbackUrl 값 확인 및 정규화
-                        String normalizedCallbackUrl = frontendCallbackUrl.trim();
+                        String actualCallbackUrl = frontendCallbackUrl;
+                        if (actualCallbackUrl == null || actualCallbackUrl.trim().isEmpty() || "null".equals(actualCallbackUrl)) {
+                                System.err.println("⚠️ [카카오 로그인] frontendCallbackUrl이 null이거나 비어있습니다. 기본값 사용: http://localhost:3000");
+                                actualCallbackUrl = "http://localhost:3000";
+                        }
+                        String normalizedCallbackUrl = actualCallbackUrl.trim();
                         if (normalizedCallbackUrl.endsWith("/")) {
                             normalizedCallbackUrl = normalizedCallbackUrl.substring(0, normalizedCallbackUrl.length() - 1);
                         }
