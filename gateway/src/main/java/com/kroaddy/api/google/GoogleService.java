@@ -46,7 +46,15 @@ public class GoogleService {
         if (googleRedirectUri == null || googleRedirectUri.isEmpty()) {
             throw new IllegalStateException("GOOGLE_REDIRECT_URI가 설정되지 않았습니다. 환경 변수를 확인하세요.");
         }
-        return UriComponentsBuilder.fromUriString("https://accounts.google.com/o/oauth2/v2/auth")
+        
+        // 디버깅: redirect_uri 값 확인
+        System.out.println("\n" + "=".repeat(80));
+        System.out.println("[GoogleService] 구글 인가 URL 생성");
+        System.out.println("=".repeat(80));
+        System.out.println("google.redirect-uri: " + googleRedirectUri);
+        System.out.println("=".repeat(80) + "\n");
+        
+        String authUrl = UriComponentsBuilder.fromUriString("https://accounts.google.com/o/oauth2/v2/auth")
                 .queryParam("client_id", googleClientId)
                 .queryParam("redirect_uri", googleRedirectUri)
                 .queryParam("response_type", "code")
@@ -54,6 +62,10 @@ public class GoogleService {
                 .queryParam("access_type", "offline")
                 .queryParam("prompt", "consent")
                 .toUriString();
+        
+        System.out.println("[GoogleService] 생성된 인가 URL: " + authUrl + "\n");
+        
+        return authUrl;
     }
 
     /**
