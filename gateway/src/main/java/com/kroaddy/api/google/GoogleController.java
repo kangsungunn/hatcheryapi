@@ -152,14 +152,14 @@ public class GoogleController {
             System.out.println("Refresh Token Length: " + refreshToken.length());
             System.out.println("=".repeat(60) + "\n");
 
-            // 4-2. Redis에 세션 정보 저장 (Upstash)
+            // 4-2. Redis에 세션 정보 저장 (Upstash) - 보안: refreshToken은 저장하지 않음
             try {
                 String sessionKey = "session:" + googleId;
                 Map<String, String> sessionData = new HashMap<>();
                 sessionData.put("userId", googleId);
                 sessionData.put("provider", "google");
                 sessionData.put("loginTime", LocalDateTime.now().toString());
-                sessionData.put("refreshToken", refreshToken);
+                // 보안: refreshToken은 HttpOnly 쿠키에만 저장하고 Redis에는 저장하지 않음
 
                 // 세션 데이터를 JSON 문자열로 저장 (7일 만료)
                 redisTemplate.opsForValue().set(sessionKey, sessionData.toString(),
@@ -167,6 +167,7 @@ public class GoogleController {
 
                 System.out.println("✅ Redis에 세션 저장 완료: " + sessionKey);
                 System.out.println("   만료 시간: " + (jwtTokenProvider.getRefreshExpiration() / 1000) + "초 (7일)");
+                System.out.println("   보안: refreshToken은 Redis에 저장하지 않음 (HttpOnly 쿠키에만 저장)");
             } catch (Exception e) {
                 System.err.println("⚠️ Redis 세션 저장 실패: " + e.getMessage());
                 // Redis 저장 실패해도 로그인은 계속 진행
