@@ -2,6 +2,7 @@ package com.kroaddy.api.naver;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/auth/naver")
@@ -24,6 +26,7 @@ public class NaverController {
 
         private final NaverService naverService;
         private final JwtTokenProvider jwtTokenProvider;
+        private final RedisTemplate<String, Object> redisTemplate;
 
         @Value("${frontend.login-callback-url:http://localhost:3000}")
         private String frontendCallbackUrl;
@@ -38,9 +41,11 @@ public class NaverController {
         private String cookieSameSite;
 
         @Autowired
-        public NaverController(NaverService naverService, JwtTokenProvider jwtTokenProvider) {
+        public NaverController(NaverService naverService, JwtTokenProvider jwtTokenProvider,
+                              RedisTemplate<String, Object> redisTemplate) {
                 this.naverService = naverService;
                 this.jwtTokenProvider = jwtTokenProvider;
+                this.redisTemplate = redisTemplate;
                 // 주의: 생성자 시점에는 @Value 주입이 아직 완료되지 않음
                 // 실제 값은 @PostConstruct에서 확인 가능
         }
@@ -134,6 +139,26 @@ public class NaverController {
                         System.out.println("Refresh Token: " + refreshToken);
                         System.out.println("Refresh Token Length: " + refreshToken.length());
                         System.out.println("=".repeat(60) + "\n");
+
+                        // 4-2. Redis에 세션 정보 저장 (Upstash)
+                        try {
+                                String sessionKey = "session:" + naverId;
+                                Map<String, String> sessionData = new HashMap<>();
+                                sessionData.put("userId", naverId);
+                                sessionData.put("provider", "naver");
+                                sessionData.put("loginTime", LocalDateTime.now().toString());
+                                sessionData.put("refreshToken", refreshToken);
+                                
+                                // 세션 데이터를 JSON 문자열로 저장 (7일 만료)
+                                redisTemplate.opsForValue().set(sessionKey, sessionData.toString(), 
+                                    jwtTokenProvider.getRefreshExpiration() / 1000, TimeUnit.SECONDS);
+                                
+                                System.out.println("✅ Redis에 세션 저장 완료: " + sessionKey);
+                                System.out.println("   만료 시간: " + (jwtTokenProvider.getRefreshExpiration() / 1000) + "초 (7일)");
+                        } catch (Exception e) {
+                                System.err.println("⚠️ Redis 세션 저장 실패: " + e.getMessage());
+                                // Redis 저장 실패해도 로그인은 계속 진행
+                        }
 
                         // 5. Access Token을 쿠키에 설정(ResponseCookie로 SameSite 명시적으로 설정)
                         ResponseCookie accessTokenCookie = ResponseCookie.from("Authorization", jwt)

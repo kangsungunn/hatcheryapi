@@ -2,6 +2,7 @@ package com.kroaddy.api.auth;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,7 @@ import java.util.Map;
 public class AuthController {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     @Value("${cookie.secure:false}")
     private boolean cookieSecure;
@@ -28,8 +30,9 @@ public class AuthController {
     private String cookieSameSite;
 
     @Autowired
-    public AuthController(JwtTokenProvider jwtTokenProvider) {
+    public AuthController(JwtTokenProvider jwtTokenProvider, RedisTemplate<String, Object> redisTemplate) {
         this.jwtTokenProvider = jwtTokenProvider;
+        this.redisTemplate = redisTemplate;
     }
 
     /**
@@ -153,6 +156,20 @@ public class AuthController {
     public ResponseEntity<Map<String, Object>> logout(HttpServletRequest request,
             HttpServletResponse response) {
         try {
+            // 토큰에서 사용자 ID 추출하여 Redis 세션 삭제
+            String token = extractTokenFromCookie(request);
+            if (token != null && jwtTokenProvider.validateToken(token)) {
+                try {
+                    String userId = jwtTokenProvider.getSubjectFromToken(token);
+                    String sessionKey = "session:" + userId;
+                    redisTemplate.delete(sessionKey);
+                    System.out.println("✅ Redis 세션 삭제 완료: " + sessionKey);
+                } catch (Exception e) {
+                    System.err.println("⚠️ Redis 세션 삭제 실패: " + e.getMessage());
+                    // Redis 삭제 실패해도 로그아웃은 계속 진행
+                }
+            }
+
             // Access Token 쿠키 삭제 (ResponseCookie로 SameSite 명시적으로 설정)
             ResponseCookie accessTokenCookie = ResponseCookie.from("Authorization", "")
                     .httpOnly(true)
