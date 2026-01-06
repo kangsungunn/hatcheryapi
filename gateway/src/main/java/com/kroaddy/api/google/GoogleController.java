@@ -41,7 +41,8 @@ public class GoogleController {
     public GoogleController(GoogleService googleService, JwtTokenProvider jwtTokenProvider) {
         this.googleService = googleService;
         this.jwtTokenProvider = jwtTokenProvider;
-        System.out.println("[구글 컨트롤러 초기화] frontendCallbackUrl: " + frontendCallbackUrl);
+        // 주의: 생성자 시점에는 @Value 주입이 아직 완료되지 않음
+        // 실제 값은 @PostConstruct에서 확인 가능
     }
 
     /**

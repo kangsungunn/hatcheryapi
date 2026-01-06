@@ -41,41 +41,30 @@ public class NaverController {
         public NaverController(NaverService naverService, JwtTokenProvider jwtTokenProvider) {
                 this.naverService = naverService;
                 this.jwtTokenProvider = jwtTokenProvider;
-                System.out.println("[네이버 컨트롤러 초기화] frontendCallbackUrl: " + frontendCallbackUrl);
+                // 주의: 생성자 시점에는 @Value 주입이 아직 완료되지 않음
+                // 실제 값은 @PostConstruct에서 확인 가능
         }
 
         /**
-         * 환경 변수 진단 (ChatGPT 제안)
-         * 컨테이너 내부에서 환경 변수가 제대로 주입되었는지 확인
+         * 환경 변수 진단 및 초기화 확인
+         * @PostConstruct 시점에는 @Value 주입이 완료되어 있음
          */
         @PostConstruct
         public void checkEnv() {
                 System.out.println("\n" + "=".repeat(80));
-                System.out.println("[네이버 컨트롤러] 환경 변수 진단 시작");
+                System.out.println("[네이버 컨트롤러] 환경 변수 초기화 확인");
                 System.out.println("=".repeat(80));
                 
-                // 1. Spring @Value로 주입된 값 확인
-                System.out.println("[@Value] frontend.login-callback-url: " + frontendCallbackUrl);
+                // Spring @Value로 주입된 값 확인 (이 시점에는 주입 완료됨)
+                System.out.println("✅ [@Value] frontend.login-callback-url: " + frontendCallbackUrl);
                 
-                // 2. System.getenv()로 직접 확인 (여러 가능한 변수명 시도)
-                System.out.println("[System.getenv] FRONTEND_LOGIN_CALLBACK_URL: " + System.getenv("FRONTEND_LOGIN_CALLBACK_URL"));
-                System.out.println("[System.getenv] FRONTEND_CALLBACK_URL: " + System.getenv("FRONTEND_CALLBACK_URL"));
-                System.out.println("[System.getenv] frontend.login-callback-url: " + System.getenv("frontend.login-callback-url"));
+                if (frontendCallbackUrl == null || frontendCallbackUrl.trim().isEmpty() || "null".equals(frontendCallbackUrl)) {
+                        System.err.println("❌ 경고: frontendCallbackUrl이 null입니다. 기본값(http://localhost:3000)을 사용합니다.");
+                } else {
+                        System.out.println("✅ frontendCallbackUrl이 정상적으로 설정되었습니다: " + frontendCallbackUrl);
+                }
                 
-                // 3. 모든 환경 변수에서 frontend 관련 찾기
-                System.out.println("\n[모든 환경 변수에서 'FRONTEND' 검색]:");
-                System.getenv().entrySet().stream()
-                    .filter(entry -> entry.getKey().toUpperCase().contains("FRONTEND"))
-                    .forEach(entry -> System.out.println("  " + entry.getKey() + " = " + entry.getValue()));
-                
-                // 4. 모든 환경 변수에서 callback 관련 찾기
-                System.out.println("\n[모든 환경 변수에서 'CALLBACK' 검색]:");
-                System.getenv().entrySet().stream()
-                    .filter(entry -> entry.getKey().toUpperCase().contains("CALLBACK"))
-                    .forEach(entry -> System.out.println("  " + entry.getKey() + " = " + entry.getValue()));
-                
-                System.out.println("=".repeat(80));
-                System.out.println("[네이버 컨트롤러] 환경 변수 진단 완료\n");
+                System.out.println("=".repeat(80) + "\n");
         }
 
         /**
