@@ -9,7 +9,6 @@ import org.springframework.data.redis.connection.lettuce.LettuceClientConfigurat
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
-import jakarta.annotation.PostConstruct;
 
 import java.time.Duration;
 
@@ -28,7 +27,26 @@ public class RedisConfig {
     @Value("${REDIS_SSL:false}")
     private boolean redisSsl;
 
-    private RedisConnectionFactory connectionFactory;
+    /**
+     * Redis Host 정규화 (http:// 또는 https:// 제거)
+     */
+    private String normalizeHost(String host) {
+        if (host == null) {
+            return "localhost";
+        }
+        String normalized = host.trim();
+        // http:// 또는 https:// 제거
+        if (normalized.startsWith("http://")) {
+            normalized = normalized.substring(7);
+        } else if (normalized.startsWith("https://")) {
+            normalized = normalized.substring(8);
+        }
+        // 마지막 슬래시 제거
+        if (normalized.endsWith("/")) {
+            normalized = normalized.substring(0, normalized.length() - 1);
+        }
+        return normalized;
+    }
 
     /**
      * Redis 연결 팩토리 생성
@@ -36,8 +54,11 @@ public class RedisConfig {
      */
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
+        // Host 정규화 (http:// 제거)
+        String normalizedHost = normalizeHost(redisHost);
+        
         RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
-        config.setHostName(redisHost);
+        config.setHostName(normalizedHost);
         config.setPort(redisPort);
         
         if (redisPassword != null && !redisPassword.isEmpty()) {
@@ -58,50 +79,33 @@ public class RedisConfig {
         LettuceClientConfiguration clientConfig = clientConfigBuilder.build();
         
         LettuceConnectionFactory factory = new LettuceConnectionFactory(config, clientConfig);
-        this.connectionFactory = factory;
+        
+        // 연결 정보 로그 출력
+        System.out.println("\n" + "=".repeat(80));
+        System.out.println("[Redis 설정] Upstash 연결 정보");
+        System.out.println("=".repeat(80));
+        System.out.println("Redis Host (원본): " + redisHost);
+        System.out.println("Redis Host (정규화): " + normalizedHost);
+        System.out.println("Redis Port: " + redisPort);
+        System.out.println("Redis SSL: " + redisSsl);
+        System.out.println("Redis Password: " + (redisPassword != null && !redisPassword.isEmpty() ? "설정됨 (길이: " + redisPassword.length() + ")" : "없음"));
+        
+        // Upstash 연결 확인
+        if (normalizedHost.contains("upstash.io")) {
+            System.out.println("✅ Upstash Redis 인스턴스로 확인됨");
+        } else if (normalizedHost.equals("localhost") || normalizedHost.equals("127.0.0.1")) {
+            System.out.println("⚠️ 로컬 Redis로 설정되어 있습니다 (Upstash 아님)");
+        } else {
+            System.out.println("ℹ️ Redis Host: " + normalizedHost);
+        }
+        System.out.println("=".repeat(80) + "\n");
         
         return factory;
     }
 
     /**
-     * Redis 연결 테스트 및 로그 출력
-     */
-    @PostConstruct
-    public void testRedisConnection() {
-        try {
-            System.out.println("\n" + "=".repeat(80));
-            System.out.println("[Redis 설정] Upstash 연결 정보 확인");
-            System.out.println("=".repeat(80));
-            System.out.println("Redis Host: " + redisHost);
-            System.out.println("Redis Port: " + redisPort);
-            System.out.println("Redis SSL: " + redisSsl);
-            System.out.println("Redis Password: " + (redisPassword != null && !redisPassword.isEmpty() ? "설정됨 (길이: " + redisPassword.length() + ")" : "없음"));
-            
-            if (connectionFactory != null) {
-                // 연결 테스트
-                var connection = connectionFactory.getConnection();
-                try {
-                    connection.ping();
-                    System.out.println("✅ Redis 연결 성공! (Upstash)");
-                    System.out.println("✅ PING 명령어 응답: PONG");
-                } catch (Exception e) {
-                    System.err.println("❌ Redis 연결 실패: " + e.getMessage());
-                    e.printStackTrace();
-                } finally {
-                    connection.close();
-                }
-            } else {
-                System.err.println("⚠️ RedisConnectionFactory가 아직 초기화되지 않았습니다.");
-            }
-            System.out.println("=".repeat(80) + "\n");
-        } catch (Exception e) {
-            System.err.println("❌ Redis 연결 테스트 중 오류 발생: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    /**
      * RedisTemplate Bean 생성
+     * 생성 후 연결 테스트 수행
      */
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
@@ -112,6 +116,43 @@ public class RedisConfig {
         template.setHashKeySerializer(new StringRedisSerializer());
         template.setHashValueSerializer(new StringRedisSerializer());
         template.afterPropertiesSet();
+        
+        // 연결 테스트
+        try {
+            String normalizedHost = normalizeHost(redisHost);
+            var connection = connectionFactory.getConnection();
+            try {
+                String pingResult = connection.ping();
+                System.out.println("\n" + "=".repeat(80));
+                System.out.println("[Redis 연결 테스트]");
+                System.out.println("=".repeat(80));
+                System.out.println("✅ Redis 연결 성공!");
+                System.out.println("✅ Host: " + normalizedHost);
+                System.out.println("✅ PING 응답: " + pingResult);
+                if (normalizedHost.contains("upstash.io")) {
+                    System.out.println("✅ Upstash Redis에 연결되었습니다!");
+                } else if (normalizedHost.equals("localhost") || normalizedHost.equals("127.0.0.1")) {
+                    System.out.println("⚠️ 로컬 Redis에 연결되었습니다 (Upstash 아님)");
+                } else {
+                    System.out.println("ℹ️ Redis Host: " + normalizedHost);
+                }
+                System.out.println("=".repeat(80) + "\n");
+            } catch (Exception e) {
+                System.err.println("\n" + "=".repeat(80));
+                System.err.println("[Redis 연결 테스트] 실패");
+                System.err.println("=".repeat(80));
+                System.err.println("❌ Redis 연결 실패: " + e.getMessage());
+                System.err.println("Host: " + normalizedHost);
+                e.printStackTrace();
+                System.err.println("=".repeat(80) + "\n");
+            } finally {
+                connection.close();
+            }
+        } catch (Exception e) {
+            System.err.println("❌ Redis 연결 테스트 중 오류: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
         return template;
     }
 }
