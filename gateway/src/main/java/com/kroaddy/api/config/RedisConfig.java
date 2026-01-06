@@ -9,6 +9,7 @@ import org.springframework.data.redis.connection.lettuce.LettuceClientConfigurat
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import jakarta.annotation.PostConstruct;
 
 import java.time.Duration;
 
@@ -26,6 +27,8 @@ public class RedisConfig {
 
     @Value("${REDIS_SSL:false}")
     private boolean redisSsl;
+
+    private RedisConnectionFactory connectionFactory;
 
     /**
      * Redis 연결 팩토리 생성
@@ -54,7 +57,47 @@ public class RedisConfig {
 
         LettuceClientConfiguration clientConfig = clientConfigBuilder.build();
         
-        return new LettuceConnectionFactory(config, clientConfig);
+        LettuceConnectionFactory factory = new LettuceConnectionFactory(config, clientConfig);
+        this.connectionFactory = factory;
+        
+        return factory;
+    }
+
+    /**
+     * Redis 연결 테스트 및 로그 출력
+     */
+    @PostConstruct
+    public void testRedisConnection() {
+        try {
+            System.out.println("\n" + "=".repeat(80));
+            System.out.println("[Redis 설정] Upstash 연결 정보 확인");
+            System.out.println("=".repeat(80));
+            System.out.println("Redis Host: " + redisHost);
+            System.out.println("Redis Port: " + redisPort);
+            System.out.println("Redis SSL: " + redisSsl);
+            System.out.println("Redis Password: " + (redisPassword != null && !redisPassword.isEmpty() ? "설정됨 (길이: " + redisPassword.length() + ")" : "없음"));
+            
+            if (connectionFactory != null) {
+                // 연결 테스트
+                var connection = connectionFactory.getConnection();
+                try {
+                    connection.ping();
+                    System.out.println("✅ Redis 연결 성공! (Upstash)");
+                    System.out.println("✅ PING 명령어 응답: PONG");
+                } catch (Exception e) {
+                    System.err.println("❌ Redis 연결 실패: " + e.getMessage());
+                    e.printStackTrace();
+                } finally {
+                    connection.close();
+                }
+            } else {
+                System.err.println("⚠️ RedisConnectionFactory가 아직 초기화되지 않았습니다.");
+            }
+            System.out.println("=".repeat(80) + "\n");
+        } catch (Exception e) {
+            System.err.println("❌ Redis 연결 테스트 중 오류 발생: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     /**
