@@ -46,39 +46,26 @@ public class GoogleController {
     }
 
     /**
-     * 환경 변수 진단 (ChatGPT 제안)
-     * 컨테이너 내부에서 환경 변수가 제대로 주입되었는지 확인
+     * 환경 변수 진단 및 초기화 확인
+     * 
+     * @PostConstruct 시점에는 @Value 주입이 완료되어 있음
      */
     @PostConstruct
     public void checkEnv() {
         System.out.println("\n" + "=".repeat(80));
-        System.out.println("[구글 컨트롤러] 환경 변수 진단 시작");
+        System.out.println("[구글 컨트롤러] 환경 변수 초기화 확인");
         System.out.println("=".repeat(80));
 
-        // 1. Spring @Value로 주입된 값 확인
-        System.out.println("[@Value] frontend.login-callback-url: " + frontendCallbackUrl);
+        // Spring @Value로 주입된 값 확인 (이 시점에는 주입 완료됨)
+        System.out.println("✅ [@Value] frontend.login-callback-url: " + frontendCallbackUrl);
 
-        // 2. System.getenv()로 직접 확인 (여러 가능한 변수명 시도)
-        System.out.println(
-                "[System.getenv] FRONTEND_LOGIN_CALLBACK_URL: " + System.getenv("FRONTEND_LOGIN_CALLBACK_URL"));
-        System.out.println("[System.getenv] FRONTEND_CALLBACK_URL: " + System.getenv("FRONTEND_CALLBACK_URL"));
-        System.out.println(
-                "[System.getenv] frontend.login-callback-url: " + System.getenv("frontend.login-callback-url"));
+        if (frontendCallbackUrl == null || frontendCallbackUrl.trim().isEmpty() || "null".equals(frontendCallbackUrl)) {
+            System.err.println("❌ 경고: frontendCallbackUrl이 null입니다. 기본값(http://localhost:3000)을 사용합니다.");
+        } else {
+            System.out.println("✅ frontendCallbackUrl이 정상적으로 설정되었습니다: " + frontendCallbackUrl);
+        }
 
-        // 3. 모든 환경 변수에서 frontend 관련 찾기
-        System.out.println("\n[모든 환경 변수에서 'FRONTEND' 검색]:");
-        System.getenv().entrySet().stream()
-                .filter(entry -> entry.getKey().toUpperCase().contains("FRONTEND"))
-                .forEach(entry -> System.out.println("  " + entry.getKey() + " = " + entry.getValue()));
-
-        // 4. 모든 환경 변수에서 callback 관련 찾기
-        System.out.println("\n[모든 환경 변수에서 'CALLBACK' 검색]:");
-        System.getenv().entrySet().stream()
-                .filter(entry -> entry.getKey().toUpperCase().contains("CALLBACK"))
-                .forEach(entry -> System.out.println("  " + entry.getKey() + " = " + entry.getValue()));
-
-        System.out.println("=".repeat(80));
-        System.out.println("[구글 컨트롤러] 환경 변수 진단 완료\n");
+        System.out.println("=".repeat(80) + "\n");
     }
 
     /**
@@ -193,11 +180,15 @@ public class GoogleController {
             }
             String redirectUrl = normalizedCallbackUrl + "/login/google/callback";
 
-            System.out.println("\n" + "=".repeat(60));
-            System.out.println("[구글 로그인] frontendCallbackUrl 원본: " + frontendCallbackUrl);
-            System.out.println("[구글 로그인] frontendCallbackUrl 정규화: " + normalizedCallbackUrl);
-            System.out.println("[구글 로그인] 프론트엔드로 리다이렉트: " + redirectUrl);
-            System.out.println("=".repeat(60) + "\n");
+            System.out.println("\n" + "=".repeat(80));
+            System.out.println("[구글 로그인] 리다이렉트 정보");
+            System.out.println("=".repeat(80));
+            System.out.println("frontendCallbackUrl 원본: " + frontendCallbackUrl);
+            System.out.println("frontendCallbackUrl 정규화: " + normalizedCallbackUrl);
+            System.out.println("최종 리다이렉트 URL: " + redirectUrl);
+            System.out.println("HTTP 상태 코드: 302 (FOUND)");
+            System.out.println("Location 헤더: " + redirectUrl);
+            System.out.println("=".repeat(80) + "\n");
 
             return ResponseEntity.status(HttpStatus.FOUND)
                     .header(HttpHeaders.LOCATION, redirectUrl)
