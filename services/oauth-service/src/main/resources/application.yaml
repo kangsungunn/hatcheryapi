@@ -5,6 +5,9 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      ssl: ${REDIS_SSL:false} # Upstash 사용 시 true로 설정
+      timeout: ${REDIS_TIMEOUT:2000}
 
 server:
   port: ${SERVER_PORT:8081}
