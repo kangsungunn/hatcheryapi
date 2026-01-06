@@ -18,6 +18,9 @@ public class CorsConfig {
         // 허용할 Origin 목록
         // allowCredentials: true일 때는 와일드카드(*) 사용 불가
         corsConfig.setAllowedOriginPatterns(Arrays.asList(
+                "https://www.hatchery.kr",
+                "https://www-hatchery-kr.vercel.app",
+                "https://*.vercel.app",  // Vercel 프리뷰 배포 도메인
                 "http://localhost:*",
                 "http://127.0.0.1:*"));
 
