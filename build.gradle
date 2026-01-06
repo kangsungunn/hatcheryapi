@@ -1,11 +1,10 @@
 buildscript {
 	repositories {
-		// Spring Repository를 먼저 시도 (Spring Boot 플러그인용)
+		// Maven Central (다른 엔드포인트 시도)
 		maven {
-			name = "Spring Repository"
-			url = uri("https://repo.spring.io/release")
+			name = "Maven Central"
+			url = uri("https://repo1.maven.org/maven2/")
 		}
-		// Maven Central
 		mavenCentral()
 		// Gradle Plugin Portal
 		maven {
@@ -26,20 +25,14 @@ allprojects {
 	version = '0.0.1-SNAPSHOT'
 	
 	repositories {
-		// Spring Repository를 먼저 시도 (Spring 의존성 우선)
+		// Maven Central (다른 엔드포인트 우선 시도)
 		maven {
-			name = "Spring Repository"
-			url = uri("https://repo.spring.io/release")
+			name = "Maven Central (repo1)"
+			url = uri("https://repo1.maven.org/maven2/")
 		}
 		
-		// Maven Central (fallback) - 403 에러 방지를 위해 재시도 설정
-		mavenCentral {
-			content {
-				// Spring 관련은 제외 (이미 Spring Repository에서 가져옴)
-				excludeGroupByRegex "org\\.springframework.*"
-				excludeGroupByRegex "org\\.springdoc.*"
-			}
-		}
+		// Maven Central (기본)
+		mavenCentral()
 		
 		// Gradle Plugin Portal (플러그인용)
 		maven {

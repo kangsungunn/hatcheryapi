@@ -21,7 +21,9 @@ COPY services services
 
 # 실행 권한 부여 및 Gateway 빌드
 # init.gradle을 사용하여 저장소 우선순위 강제
-RUN chmod +x gradlew && ./gradlew :gateway:build -x test --init-script init.gradle --refresh-dependencies
+# --no-daemon: Docker 빌드에서 데몬 사용 안 함
+# --build-cache: 빌드 캐시 사용
+RUN chmod +x gradlew && ./gradlew :gateway:build -x test --init-script init.gradle --no-daemon --build-cache
 
 # 2단계: 실행
 FROM eclipse-temurin:21-jre

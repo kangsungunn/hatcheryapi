@@ -1,22 +1,16 @@
 // Gradle 초기화 스크립트 - 저장소 우선순위 강제 설정
-// Maven Central 403 에러 방지를 위해 Spring Repository 우선 사용
+// Maven Central 403 에러 방지를 위해 다른 엔드포인트 사용
 
 allprojects {
     repositories {
-        // Spring Repository를 최우선으로 사용
+        // Maven Central (repo1 엔드포인트 우선)
         maven {
-            name = "Spring Repository"
-            url = uri("https://repo.spring.io/release")
+            name = "Maven Central (repo1)"
+            url = uri("https://repo1.maven.org/maven2/")
         }
         
-        // Maven Central (fallback) - Spring 관련 제외
-        mavenCentral {
-            content {
-                excludeGroupByRegex "org\\.springframework.*"
-                excludeGroupByRegex "org\\.springdoc.*"
-                excludeGroupByRegex "io\\.micrometer.*"
-            }
-        }
+        // Maven Central (기본)
+        mavenCentral()
         
         // Gradle Plugin Portal
         maven {
