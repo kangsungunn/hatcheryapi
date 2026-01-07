@@ -113,16 +113,16 @@ springdoc:
     operations-sorter: method
     tags-sorter: alpha
 
-  # 로깅 설정
-  logging:
-    level:
-      root: ${LOG_LEVEL:INFO}
-      com.kroaddy: ${LOG_LEVEL:DEBUG}
-      org.springframework.web: ${LOG_LEVEL:INFO}
-      org.hibernate: ${LOG_LEVEL:INFO}
-      org.hibernate.SQL: ${LOG_LEVEL:DEBUG}
-      org.hibernate.type.descriptor.sql.BasicBinder: ${LOG_LEVEL:TRACE}
-      com.zaxxer.hikari: ${LOG_LEVEL:DEBUG}
+# 로깅 설정
+logging:
+  level:
+    root: ${LOG_LEVEL:INFO}
+    com.kroaddy: ${LOG_LEVEL:DEBUG}
+    org.springframework.web: ${LOG_LEVEL:INFO}
+    org.hibernate: ${LOG_LEVEL:INFO}
+    org.hibernate.SQL: ${LOG_LEVEL:DEBUG}
+    org.hibernate.type.descriptor.sql.BasicBinder: ${LOG_LEVEL:TRACE}
+    com.zaxxer.hikari: ${LOG_LEVEL:DEBUG}
 
 # 배포 정보 설정 (GitHub Actions에서 주입)
 app:
