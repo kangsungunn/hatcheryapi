@@ -65,6 +65,25 @@ jobs:
                     
                     echo "=== Starting Deployment ==="
                     
+                    # 디스크 공간 확인
+                    echo "Checking disk space..."
+                    df -h /
+                    
+                    # Docker 정리 (디스크 공간 확보)
+                    echo "Cleaning up Docker resources..."
+                    # 중지된 컨테이너 삭제
+                    docker container prune -f || true
+                    # 사용하지 않는 이미지 삭제 (현재 실행 중인 컨테이너의 이미지는 제외)
+                    docker image prune -a -f --filter "until=24h" || true
+                    # 사용하지 않는 볼륨 삭제
+                    docker volume prune -f || true
+                    # Docker 시스템 정리
+                    docker system prune -f || true
+                    
+                    # 정리 후 디스크 공간 확인
+                    echo "Disk space after cleanup:"
+                    df -h /
+                    
                     # 최신 이미지 pull
                     echo "Pulling latest image from Docker Hub..."
                     docker pull ${{ env.IMAGE_NAME }}:latest
