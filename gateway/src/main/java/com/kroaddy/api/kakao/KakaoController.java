@@ -9,7 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.kroaddy.api.jwt.JwtTokenProvider;
 import com.kroaddy.api.kakao.dto.KakaoUserInfo;
+import com.kroaddy.api.service.LoginLogService;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.annotation.PostConstruct;
 import org.springframework.http.ResponseCookie;
@@ -27,6 +29,7 @@ public class KakaoController {
         private final KakaoService kakaoService;
         private final JwtTokenProvider jwtTokenProvider;
         private final RedisTemplate<String, Object> redisTemplate;
+        private final LoginLogService loginLogService;
 
         @Value("${frontend.login-callback-url:http://localhost:3000}")
         private String frontendCallbackUrl;
@@ -42,10 +45,11 @@ public class KakaoController {
 
         @Autowired
         public KakaoController(KakaoService kakaoService, JwtTokenProvider jwtTokenProvider,
-                              RedisTemplate<String, Object> redisTemplate) {
+                              RedisTemplate<String, Object> redisTemplate, LoginLogService loginLogService) {
                 this.kakaoService = kakaoService;
                 this.jwtTokenProvider = jwtTokenProvider;
                 this.redisTemplate = redisTemplate;
+                this.loginLogService = loginLogService;
                 // 주의: 생성자 시점에는 @Value 주입이 아직 완료되지 않음
                 // 실제 값은 @PostConstruct에서 확인 가능
         }
@@ -99,6 +103,7 @@ public class KakaoController {
          */
         @GetMapping("/callback")
         public ResponseEntity<?> kakaoCallback(@RequestParam("code") String code,
+                        HttpServletRequest request,
                         HttpServletResponse response) {
                 try {
                         // 1. 인가 코드로 액세스 토큰 요청
@@ -181,6 +186,15 @@ public class KakaoController {
                                                                                                            // None
                                         .build();
                         response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
+
+                        // 4-3. NeonDB에 로그인 로그 저장 (Refresh Token 포함)
+                        try {
+                                loginLogService.saveLoginLog(kakaoId, "kakao", jwt, refreshToken, request);
+                                System.out.println("✅ NeonDB에 로그인 로그 저장 완료: userId=" + kakaoId + ", provider=kakao");
+                        } catch (Exception e) {
+                                System.err.println("⚠️ NeonDB 로그인 로그 저장 실패: " + e.getMessage());
+                                // 로그 저장 실패해도 로그인은 계속 진행
+                        }
 
                         // 6. 프론트엔드 콜백 페이지로 리다이렉트(토큰 포함 URL)
                         // frontendCallbackUrl 값 확인 및 정규화
