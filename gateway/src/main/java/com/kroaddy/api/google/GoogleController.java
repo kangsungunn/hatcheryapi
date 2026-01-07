@@ -200,10 +200,20 @@ public class GoogleController {
 
             // 4-3. NeonDB에 로그인 로그 저장 (Refresh Token 포함)
             try {
+                System.out.println("\n[GoogleController] 로그인 로그 저장 호출 시작");
+                System.out.println("userId: " + googleId);
+                System.out.println("provider: google");
+                System.out.println("jwt 길이: " + (jwt != null ? jwt.length() : "null"));
+                System.out.println("refreshToken 길이: " + (refreshToken != null ? refreshToken.length() : "null"));
+
                 loginLogService.saveLoginLog(googleId, "google", jwt, refreshToken, request);
-                System.out.println("✅ NeonDB에 로그인 로그 저장 완료: userId=" + googleId + ", provider=google");
+
+                System.out.println("[GoogleController] ✅ 로그인 로그 저장 호출 완료\n");
             } catch (Exception e) {
-                System.err.println("⚠️ NeonDB 로그인 로그 저장 실패: " + e.getMessage());
+                System.err.println("\n[GoogleController] ❌ 로그인 로그 저장 호출 실패!");
+                System.err.println("에러: " + e.getMessage());
+                e.printStackTrace();
+                System.err.println();
                 // 로그 저장 실패해도 로그인은 계속 진행
             }
 

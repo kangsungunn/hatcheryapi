@@ -29,14 +29,24 @@ public class LoginLogService {
     @Transactional
     public void saveLoginLog(String userId, String provider, String accessToken, String refreshToken, HttpServletRequest request) {
         try {
+            System.out.println("\n" + "=".repeat(80));
+            System.out.println("[LoginLogService] 로그인 로그 저장 시작");
+            System.out.println("=".repeat(80));
+            System.out.println("userId: " + userId);
+            System.out.println("provider: " + provider);
+            System.out.println("accessToken 길이: " + (accessToken != null ? accessToken.length() : "null"));
+            System.out.println("refreshToken 길이: " + (refreshToken != null ? refreshToken.length() : "null"));
+            
             // IP 주소 추출
             String ipAddress = getClientIpAddress(request);
+            System.out.println("IP 주소: " + ipAddress);
             
             // User-Agent 추출
             String userAgent = request.getHeader("User-Agent");
             if (userAgent != null && userAgent.length() > 500) {
                 userAgent = userAgent.substring(0, 500);
             }
+            System.out.println("User-Agent: " + (userAgent != null ? userAgent.substring(0, Math.min(50, userAgent.length())) + "..." : "null"));
             
             // 로그 엔티티 생성
             LoginLog loginLog = LoginLog.builder()
@@ -49,11 +59,32 @@ public class LoginLogService {
                     .refreshToken(refreshToken)
                     .build();
             
-            // 데이터베이스에 저장
-            loginLogRepository.save(loginLog);
+            System.out.println("LoginLog 엔티티 생성 완료");
+            System.out.println("Repository에 저장 시도...");
             
-            log.info("✅ 로그인 로그 저장 완료: userId={}, provider={}, ip={}", userId, provider, ipAddress);
+            // 데이터베이스에 저장
+            LoginLog savedLog = loginLogRepository.save(loginLog);
+            
+            System.out.println("✅ 로그인 로그 저장 완료!");
+            System.out.println("저장된 ID: " + savedLog.getId());
+            System.out.println("userId: " + savedLog.getUserId());
+            System.out.println("provider: " + savedLog.getProvider());
+            System.out.println("loginTime: " + savedLog.getLoginTime());
+            System.out.println("=".repeat(80) + "\n");
+            
+            log.info("✅ 로그인 로그 저장 완료: userId={}, provider={}, ip={}, id={}", userId, provider, ipAddress, savedLog.getId());
         } catch (Exception e) {
+            System.err.println("\n" + "=".repeat(80));
+            System.err.println("[LoginLogService] ❌ 로그인 로그 저장 실패!");
+            System.err.println("=".repeat(80));
+            System.err.println("userId: " + userId);
+            System.err.println("provider: " + provider);
+            System.err.println("에러 메시지: " + e.getMessage());
+            System.err.println("에러 클래스: " + e.getClass().getName());
+            System.err.println("스택 트레이스:");
+            e.printStackTrace();
+            System.err.println("=".repeat(80) + "\n");
+            
             log.error("⚠️ 로그인 로그 저장 실패: userId={}, provider={}, error={}", userId, provider, e.getMessage(), e);
             // 로그 저장 실패해도 로그인은 계속 진행
         }
