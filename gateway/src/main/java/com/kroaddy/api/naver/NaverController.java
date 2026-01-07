@@ -145,14 +145,15 @@ public class NaverController {
                         System.out.println("Refresh Token Length: " + refreshToken.length());
                         System.out.println("=".repeat(60) + "\n");
 
-                        // 4-2. Redis에 세션 정보 저장 (Upstash) - 보안: refreshToken은 저장하지 않음
+                        // 4-2. Redis에 세션 정보 저장 (Upstash) - Access Token만 저장
                         try {
                                 String sessionKey = "session:" + naverId;
                                 Map<String, String> sessionData = new HashMap<>();
                                 sessionData.put("userId", naverId);
                                 sessionData.put("provider", "naver");
                                 sessionData.put("loginTime", LocalDateTime.now().toString());
-                                // 보안: refreshToken은 HttpOnly 쿠키에만 저장하고 Redis에는 저장하지 않음
+                                sessionData.put("accessToken", jwt); // Access Token 저장
+                                // 보안: refreshToken은 HttpOnly 쿠키와 NeonDB에만 저장하고 Redis에는 저장하지 않음
                                 
                                 // 세션 데이터를 JSON 문자열로 저장 (7일 만료)
                                 redisTemplate.opsForValue().set(sessionKey, sessionData.toString(), 
@@ -160,7 +161,7 @@ public class NaverController {
                                 
                                 System.out.println("✅ Redis에 세션 저장 완료: " + sessionKey);
                                 System.out.println("   만료 시간: " + (jwtTokenProvider.getRefreshExpiration() / 1000) + "초 (7일)");
-                                System.out.println("   보안: refreshToken은 Redis에 저장하지 않음 (HttpOnly 쿠키에만 저장)");
+                                System.out.println("   저장된 토큰: accessToken (refreshToken은 저장하지 않음)");
                         } catch (Exception e) {
                                 System.err.println("⚠️ Redis 세션 저장 실패: " + e.getMessage());
                                 // Redis 저장 실패해도 로그인은 계속 진행
@@ -190,9 +191,11 @@ public class NaverController {
                                         .build();
                         response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
 
-                        // 4-3. NeonDB에 로그인 로그 저장 (Refresh Token 포함)
+                        // 4-3. NeonDB에 로그인 로그 저장 (Refresh Token만 저장)
                         try {
-                                loginLogService.saveLoginLog(naverId, "naver", jwt, refreshToken, request);
+                                System.out.println("보안: accessToken은 Redis에만 저장, refreshToken은 NeonDB에만 저장");
+                                // NeonDB에는 refreshToken만 저장 (accessToken은 null)
+                                loginLogService.saveLoginLog(naverId, "naver", null, refreshToken, request);
                                 System.out.println("✅ NeonDB에 로그인 로그 저장 완료: userId=" + naverId + ", provider=naver");
                         } catch (Exception e) {
                                 System.err.println("⚠️ NeonDB 로그인 로그 저장 실패: " + e.getMessage());

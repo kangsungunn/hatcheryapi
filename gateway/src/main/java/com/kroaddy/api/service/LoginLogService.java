@@ -18,23 +18,24 @@ public class LoginLogService {
     private final LoginLogRepository loginLogRepository;
     
     /**
-     * 로그인 로그 저장 (Refresh Token 포함)
+     * 로그인 로그 저장 (Refresh Token만 저장)
+     * 보안: accessToken은 Redis에만 저장하고, refreshToken은 NeonDB에만 저장
      * 
      * @param userId 사용자 ID
      * @param provider 로그인 제공자 (google, kakao, naver)
-     * @param accessToken Access Token
-     * @param refreshToken Refresh Token
+     * @param accessToken Access Token (null로 전달 - Redis에만 저장)
+     * @param refreshToken Refresh Token (NeonDB에만 저장)
      * @param request HttpServletRequest (IP, User-Agent 추출용)
      */
     @Transactional
     public void saveLoginLog(String userId, String provider, String accessToken, String refreshToken, HttpServletRequest request) {
         try {
             System.out.println("\n" + "=".repeat(80));
-            System.out.println("[LoginLogService] 로그인 로그 저장 시작");
+            System.out.println("[LoginLogService] 로그인 로그 저장 시작 (Refresh Token만 저장)");
             System.out.println("=".repeat(80));
             System.out.println("userId: " + userId);
             System.out.println("provider: " + provider);
-            System.out.println("accessToken 길이: " + (accessToken != null ? accessToken.length() : "null"));
+            System.out.println("accessToken: " + (accessToken != null ? "Redis에 저장됨" : "null (Redis에만 저장)"));
             System.out.println("refreshToken 길이: " + (refreshToken != null ? refreshToken.length() : "null"));
             
             // 데이터베이스 연결 정보 확인 (디버깅용)
@@ -56,15 +57,15 @@ public class LoginLogService {
             }
             System.out.println("User-Agent: " + (userAgent != null ? userAgent.substring(0, Math.min(50, userAgent.length())) + "..." : "null"));
             
-            // 로그 엔티티 생성
+            // 로그 엔티티 생성 (refreshToken만 저장, accessToken은 null)
             LoginLog loginLog = LoginLog.builder()
                     .userId(userId)
                     .provider(provider)
                     .loginTime(LocalDateTime.now())
                     .ipAddress(ipAddress)
                     .userAgent(userAgent != null ? userAgent : "Unknown")
-                    .accessToken(accessToken)
-                    .refreshToken(refreshToken)
+                    .accessToken(null) // Access Token은 Redis에만 저장
+                    .refreshToken(refreshToken) // Refresh Token만 NeonDB에 저장
                     .build();
             
             System.out.println("LoginLog 엔티티 생성 완료");
