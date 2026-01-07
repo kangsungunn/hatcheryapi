@@ -37,6 +37,14 @@ public class LoginLogService {
             System.out.println("accessToken 길이: " + (accessToken != null ? accessToken.length() : "null"));
             System.out.println("refreshToken 길이: " + (refreshToken != null ? refreshToken.length() : "null"));
             
+            // 데이터베이스 연결 정보 확인 (디버깅용)
+            try {
+                var connection = loginLogRepository.getClass().getClassLoader();
+                System.out.println("[DEBUG] Repository 클래스: " + loginLogRepository.getClass().getName());
+            } catch (Exception debugEx) {
+                // 무시
+            }
+            
             // IP 주소 추출
             String ipAddress = getClientIpAddress(request);
             System.out.println("IP 주소: " + ipAddress);

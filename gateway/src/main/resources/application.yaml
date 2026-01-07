@@ -24,6 +24,7 @@ spring:
       enabled: false
 
   # 데이터베이스 설정 (Neon PostgreSQL)
+  # 주의: SPRING_DATASOURCE_URL에 이미 파라미터가 있으면 &currentSchema=public 추가 필요
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/kroaddy}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
@@ -33,6 +34,8 @@ spring:
       maximum-pool-size: ${SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE:10}
       minimum-idle: ${SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE:5}
       connection-timeout: ${SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT:30000}
+      # 연결 시마다 public 스키마를 사용하도록 설정
+      connection-init-sql: "SET search_path TO public"
 
   # JPA 설정
   jpa:
@@ -42,6 +45,11 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        default_schema: public  # 기본 스키마 명시
+        # Entity의 @Table(schema = "public")을 존중하도록 설정
+        use_sql_comments: true
+        # 스키마를 명시적으로 사용
+        globally_quoted_identifiers: false
 
   # Redis 설정 (Upstash 지원)
   data:
@@ -105,13 +113,16 @@ springdoc:
     operations-sorter: method
     tags-sorter: alpha
 
-# 로깅 설정
-logging:
-  level:
-    root: ${LOG_LEVEL:INFO}
-    com.kroaddy: ${LOG_LEVEL:DEBUG}
-    org.springframework.web: ${LOG_LEVEL:INFO}
-    org.hibernate: ${LOG_LEVEL:WARN}
+  # 로깅 설정
+  logging:
+    level:
+      root: ${LOG_LEVEL:INFO}
+      com.kroaddy: ${LOG_LEVEL:DEBUG}
+      org.springframework.web: ${LOG_LEVEL:INFO}
+      org.hibernate: ${LOG_LEVEL:INFO}
+      org.hibernate.SQL: ${LOG_LEVEL:DEBUG}
+      org.hibernate.type.descriptor.sql.BasicBinder: ${LOG_LEVEL:TRACE}
+      com.zaxxer.hikari: ${LOG_LEVEL:DEBUG}
 
 # 배포 정보 설정 (GitHub Actions에서 주입)
 app:
