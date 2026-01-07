@@ -194,8 +194,8 @@ public class NaverController {
                         // 4-3. NeonDB에 로그인 로그 저장 (Refresh Token만 저장)
                         try {
                                 System.out.println("보안: accessToken은 Redis에만 저장, refreshToken은 NeonDB에만 저장");
-                                // NeonDB에는 refreshToken만 저장 (accessToken은 null)
-                                loginLogService.saveLoginLog(naverId, "naver", null, refreshToken, request);
+                                // NeonDB에는 refreshToken만 저장
+                                loginLogService.saveLoginLog(naverId, "naver", refreshToken, request);
                                 System.out.println("✅ NeonDB에 로그인 로그 저장 완료: userId=" + naverId + ", provider=naver");
                         } catch (Exception e) {
                                 System.err.println("⚠️ NeonDB 로그인 로그 저장 실패: " + e.getMessage());

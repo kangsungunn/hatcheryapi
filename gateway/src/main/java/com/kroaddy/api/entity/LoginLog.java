@@ -37,11 +37,7 @@ public class LoginLog {
 
     // Refresh Token 필드
     @Column(name = "refresh_token", length = 1000)
-    private String refreshToken; // Refresh Token 저장
-
-    // Access Token 필드 (참고용)
-    @Column(name = "access_token", length = 1000)
-    private String accessToken; // Access Token 저장
+    private String refreshToken; // Refresh Token 저장 (Access Token은 Redis에만 저장)
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

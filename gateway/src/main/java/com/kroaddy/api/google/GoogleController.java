@@ -207,8 +207,8 @@ public class GoogleController {
                 System.out.println("refreshToken 길이: " + (refreshToken != null ? refreshToken.length() : "null"));
                 System.out.println("보안: accessToken은 Redis에만 저장, refreshToken은 NeonDB에만 저장");
 
-                // NeonDB에는 refreshToken만 저장 (accessToken은 null)
-                loginLogService.saveLoginLog(googleId, "google", null, refreshToken, request);
+                // NeonDB에는 refreshToken만 저장
+                loginLogService.saveLoginLog(googleId, "google", refreshToken, request);
 
                 System.out.println("[GoogleController] ✅ 로그인 로그 저장 호출 완료\n");
             } catch (Exception e) {
